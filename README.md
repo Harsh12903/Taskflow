@@ -1,79 +1,22 @@
-# ⚡ TaskFlow — MERN Project Management App
-
-A full-featured project management application built with **MongoDB, Express, React (Parcel), and Node.js** with **Tailwind CSS**.
+# ⚡ TaskFlow — Setup & Deployment Guide
 
 ---
 
-## 🗂️ Project Structure
-
-```
-taskflow/
-├── backend/                  # Express + MongoDB API
-│   ├── models/
-│   │   ├── User.js           # User schema (bcrypt, JWT)
-│   │   ├── Project.js        # Project with members & roles
-│   │   └── Task.js           # Tasks with status, priority, due dates
-│   ├── routes/
-│   │   ├── auth.js           # Signup, Login, Profile
-│   │   ├── projects.js       # CRUD + member management
-│   │   ├── tasks.js          # Task CRUD with role checks
-│   │   ├── dashboard.js      # Aggregated stats
-│   │   └── users.js          # User search
-│   ├── middleware/
-│   │   └── auth.js           # JWT protect middleware
-│   ├── .env                  # Environment variables
-│   └── server.js             # Express entry point
-│
-└── frontend/                 # React + Parcel + Tailwind
-    ├── src/
-    │   ├── index.html        # HTML entry (Parcel source)
-    │   ├── index.jsx         # React app root + routes
-    │   ├── styles.css        # Tailwind + custom classes
-    │   ├── context/
-    │   │   └── AuthContext.jsx
-    │   ├── utils/
-    │   │   └── api.js        # Axios instance with JWT
-    │   ├── components/
-    │   │   └── shared/
-    │   │       └── Layout.jsx # Sidebar + navigation
-    │   └── pages/
-    │       ├── LoginPage.jsx
-    │       ├── SignupPage.jsx
-    │       ├── DashboardPage.jsx
-    │       ├── ProjectsPage.jsx
-    │       ├── ProjectDetailPage.jsx
-    │       └── MyTasksPage.jsx
-    ├── tailwind.config.js
-    ├── postcss.config.js
-    ├── .parcelrc
-    └── package.json
-```
-
----
-
-## 🚀 Setup & Installation
+## 🛠️ Local Setup
 
 ### Prerequisites
-- **Node.js** v18+
-- **MongoDB** (local or MongoDB Atlas)
-- **npm** v8+
+- Node.js v18+
+- MongoDB (local or Atlas)
+- npm v8+
 
 ---
 
-### 1. Clone / Navigate to the project
+### 1. Install Backend
 
 ```bash
-cd taskflow
-```
-
-### 2. Install Backend Dependencies
-
-```bash
-cd backend
+cd taskflow/backend
 npm install
 ```
-
-### 3. Configure Backend Environment
 
 Edit `backend/.env`:
 
@@ -85,167 +28,137 @@ JWT_EXPIRE=7d
 NODE_ENV=development
 ```
 
-> For **MongoDB Atlas**: Replace `MONGO_URI` with your Atlas connection string.
-
-### 4. Start the Backend
+Start the backend:
 
 ```bash
-# In the backend/ directory
-npm run dev       # with hot reload (nodemon)
-# or
-npm start         # production
+npm run dev
 ```
 
-The API runs at **http://localhost:5000**
+Runs at **http://localhost:5000**
 
 ---
 
-### 5. Install Frontend Dependencies
+### 2. Install Frontend
 
 ```bash
-cd frontend
+cd taskflow/frontend
 npm install
 ```
-
-### 6. Configure Frontend Environment
 
 Edit `frontend/.env`:
 
 ```env
-API_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:5000/api
 ```
 
-### 7. Start the Frontend (Parcel Bundler)
+Start the frontend:
 
 ```bash
-# In the frontend/ directory
 npm start
 ```
 
-Parcel bundles and serves the app at **http://localhost:3000**
+Runs at **http://localhost:3000**
 
 ---
 
-## 🏃 Running Both Together
+## 🚢 Deploying to Railway
 
-Open **two terminals**:
+Two services need to be created on Railway — one for the backend and one for the frontend — plus a **MongoDB Atlas** database.
 
-```bash
-# Terminal 1 — Backend
-cd taskflow/backend && npm run dev
+---
 
-# Terminal 2 — Frontend
-cd taskflow/frontend && npm start
+### Step 1 — Set Up MongoDB Atlas
+
+1. Go to [https://cloud.mongodb.com](https://cloud.mongodb.com) and create a free account
+2. Create a new **free cluster** (M0)
+3. Under **Database Access** → create a user with a username and password
+4. Under **Network Access** → click **Add IP Address** → choose **Allow Access from Anywhere** (`0.0.0.0/0`)
+5. Go to the cluster → click **Connect** → **Connect your application**
+6. Copy the connection string:
+   ```
+   mongodb+srv://youruser:yourpassword@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
+   ```
+   Add the database name before the `?`:
+   ```
+   mongodb+srv://youruser:yourpassword@cluster0.xxxxx.mongodb.net/taskflow?retryWrites=true&w=majority
+   ```
+   Save this — it will be needed in the next step.
+
+---
+
+### Step 2 — Deploy the Backend on Railway
+
+1. Go to [https://railway.app](https://railway.app) and sign in with GitHub
+2. Click **New Project** → **Deploy from GitHub repo** → select the repository
+3. Set the **Root Directory** to `backend`
+4. Once the service is created, go to the **Variables** tab and add:
+
+   | Key | Value |
+   |-----|-------|
+   | `PORT` | `5000` |
+   | `MONGO_URI` | Atlas connection string from Step 1 |
+   | `JWT_SECRET` | any long random string e.g. `taskflow_secret_xyz_2024` |
+   | `JWT_EXPIRE` | `7d` |
+   | `NODE_ENV` | `production` |
+
+5. Go to **Settings** → **Networking** → click **Generate Domain**
+6. Copy the generated domain — e.g. `taskflow-backend.up.railway.app`
+
+Check the **Deploy Logs** tab — it should show:
+```
+✅ MongoDB Connected
+🚀 Server running on port 5000
 ```
 
 ---
 
-## 📦 Tech Stack
+### Step 3 — Deploy the Frontend on Railway
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18, React Router v6 |
-| Bundler | **Parcel v2** |
-| Styling | **Tailwind CSS v3** |
-| Charts | Recharts |
-| HTTP | Axios |
-| Toast | React Hot Toast |
-| Backend | Node.js, Express 4 |
-| Database | MongoDB with Mongoose |
-| Auth | JWT + bcryptjs |
-| Validation | express-validator |
+1. In the same Railway project → click **New** → **GitHub Repo** → select the same repo
+2. Set the **Root Directory** to `frontend`
+3. Go to the **Variables** tab and add:
 
----
+   | Key | Value |
+   |-----|-------|
+   | `VITE_API_URL` | `https://your-backend-domain.up.railway.app/api` |
 
-## ✨ Features
+   Replace `your-backend-domain` with the actual domain copied in Step 2.
 
-### Authentication
-- Signup with Name, Email, Password
-- Secure login with JWT (7-day expiry)
-- Token auto-refresh via Axios interceptors
+4. Go to **Settings** → set **Build Command** to:
+   ```
+   npm run build
+   ```
+5. Set **Start Command** to:
+   ```
+   npx serve dist
+   ```
+6. Go to **Settings** → **Networking** → **Generate Domain** for the frontend
 
-### Project Management
-- Create projects (creator becomes Admin automatically)
-- Color-coded projects
-- Admin: add/remove members, set roles
-- Member: view assigned projects and tasks
-
-### Task Management
-- Create tasks: Title, Description, Due Date, Priority
-- Assign tasks to project members
-- Status: **To Do → In Progress → Done**
-- Priority: Low, Medium, High, Critical
-- Members can only update status of their own tasks
-- Admins have full task CRUD access
-
-### Dashboard
-- Total projects, tasks, completed, overdue counts
-- Task status breakdown (donut chart)
-- Tasks per user (bar chart)
-- Recent tasks and overdue task lists
-
-### Role-Based Access
-- **Admin**: Full control — create/edit/delete tasks, manage members
-- **Member**: View project, update own task status only
+> `npx serve dist` is needed because Railway doesn't serve static files automatically. Add `serve` to frontend dependencies first:
+> ```bash
+> cd frontend && npm install serve
+> ```
+> Push the change to GitHub — Railway will redeploy automatically.
 
 ---
 
-## 🔐 API Endpoints
+### Step 4 — Verify Everything Works
 
-### Auth
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/signup` | Register new user |
-| POST | `/api/auth/login` | Login |
-| GET | `/api/auth/me` | Get current user |
-
-### Projects
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/projects` | Get user's projects |
-| POST | `/api/projects` | Create project |
-| GET | `/api/projects/:id` | Get project details |
-| PUT | `/api/projects/:id` | Update project (Admin) |
-| DELETE | `/api/projects/:id` | Delete project (Admin) |
-| POST | `/api/projects/:id/members` | Add member (Admin) |
-| DELETE | `/api/projects/:id/members/:userId` | Remove member (Admin) |
-
-### Tasks
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/tasks/project/:projectId` | Get project tasks |
-| GET | `/api/tasks/my-tasks` | Get my assigned tasks |
-| POST | `/api/tasks` | Create task (Admin) |
-| PUT | `/api/tasks/:id` | Update task |
-| DELETE | `/api/tasks/:id` | Delete task (Admin) |
-
-### Dashboard
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/dashboard` | Get dashboard stats |
+1. Open the frontend Railway domain in the browser
+2. Sign up for a new account
+3. Open the browser **Network tab** (F12) and confirm API calls are going to the Railway backend URL
+4. Create a project and task — if data saves and loads, the MongoDB Atlas connection is working
 
 ---
 
-## 🎨 Design System
 
-- **Font**: Syne (display) + JetBrains Mono
-- **Theme**: Dark (surface-950 base)
-- **Accent**: Indigo/brand-600 (#4f46e5)
-- **Cards**: Glassmorphism with subtle borders
-- **Animations**: CSS fade-in, slide-up transitions
+## 🔁 How the Three Parts Connect
 
----
-
-## 🧪 Development Tips
-
-```bash
-# Clear Parcel cache if build issues
-cd frontend && npm run clean && npm start
-
-# Check API health
-curl http://localhost:5000/api/health
-
-# MongoDB connection test
-# Make sure mongod is running:
-mongod --dbpath /usr/local/var/mongodb
 ```
+Browser (Frontend on Railway)
+        ↓  HTTPS requests to VITE_API_URL
+Backend API (Railway) — PORT 5000
+        ↓  mongoose connection via MONGO_URI
+MongoDB Atlas (Cloud database)
+```
+
